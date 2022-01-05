@@ -33,7 +33,7 @@ export function getMenuSelect() {
   });
 }
 
-export function postMenu(data: any) {
+export function createMenu(data: any) {
   return request({
     method: 'post',
     url: '/menu/create',
@@ -41,11 +41,24 @@ export function postMenu(data: any) {
   });
 }
 
+export function updateMenu(data: any) {
+  return request({
+    method: 'patch',
+    url: `/menu/update/${data.id}`,
+    data
+  });
+}
+
 export function deleteMenu(id: BaseMenuItem['id']) {
   return request({
     method: 'delete',
-    url: `/menu/delete/${id}`,
-    data: { id }
+    url: `/menu/delete/${id}`
+  });
+}
+
+export function getMenuById(id: BaseMenuItem['id']) {
+  return request({
+    url: `/menu/${id}`
   });
 }
 

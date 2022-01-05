@@ -4,18 +4,6 @@ module.exports = {
   eslint: {
     enable: false
   },
-  style: {
-    css: {
-      loaderOptions: (cssLoaderOptions, { env, paths }) => {
-        return cssLoaderOptions;
-      }
-    }
-  },
-  webpack: {
-    configure: (webpackConfig, { env, paths }) => {
-      return webpackConfig;
-    }
-  },
   devServer: (devServerConfig, { env, paths, proxy, allowedHost }) => {
     devServerConfig.before = require('./mock/mock-server.js');
     return devServerConfig;

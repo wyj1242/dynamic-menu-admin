@@ -34,7 +34,7 @@ function unregisterRoutes() {
 // for mock server
 const responseFake = (url, type, respond) => {
   return {
-    url,
+    url: url,
     type: type || 'get',
     response(req, res) {
       console.log('request invoke:' + req.path)

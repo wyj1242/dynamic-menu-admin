@@ -1,14 +1,11 @@
 import React from 'react';
 import { RouteObject, Navigate } from 'react-router-dom';
 import { Spin } from 'antd';
-import { LoadingOutlined } from '@ant-design/icons';
 import getAsyncComponent from 'components/asyncComponent';
 import WrapperRouteComponent from './WrapperRouteComponent';
 
 import Login from 'pages/login';
 import Layout from 'layout';
-
-const antIcon = <LoadingOutlined style={{ fontSize: 24 }} spin />;
 
 const asyncComponent = (resolve: any) => {
   return getAsyncComponent({
@@ -27,6 +24,8 @@ const User = asyncComponent(() => import('pages/system/user'));
 const Role = asyncComponent(() => import('pages/system/role'));
 const Permission = asyncComponent(() => import('pages/system/permission'));
 const Menu = asyncComponent(() => import('pages/system/menu'));
+const VideoList = asyncComponent(() => import('pages/video/list'));
+const VideoDetails = asyncComponent(() => import('pages/video/details'));
 
 const routes: RouteObject[] = [
   {
@@ -56,8 +55,20 @@ const routes: RouteObject[] = [
       {
         path: 'system/menu',
         element: <WrapperRouteComponent element={<Menu />} />
+      },
+      {
+        path: 'video/list',
+        element: <WrapperRouteComponent element={<VideoList />} />
+      },
+      {
+        path: 'video/:id',
+        element: <WrapperRouteComponent element={<VideoDetails />} />
       }
     ]
+  },
+  {
+    path: '/403',
+    element: <h3>No permissions</h3>
   },
   {
     path: '/404',

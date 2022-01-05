@@ -29,6 +29,7 @@ export function useLogout() {
 
 export default function useUser() {
   return useQuery('user', services.user.getUserInfo, {
-    enabled: !!getToken()
+    enabled: !!getToken(),
+    staleTime: Infinity
   });
 }

@@ -2,13 +2,12 @@ import { useMemo } from 'react';
 import { useQuery } from 'react-query';
 import services from 'services';
 import { buildTree } from 'utils/tree';
+import { getToken } from 'utils/auth';
 
 export default function useMenu() {
   const { data, ...rest } = useQuery('menu.nav', services.menu.getMenuNav, {
-    staleTime: Infinity,
-    select: data => {
-      return data;
-    }
+    enabled: !!getToken(),
+    staleTime: Infinity
   });
 
   const menuList = useMemo(() => {

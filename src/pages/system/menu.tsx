@@ -1,4 +1,4 @@
-import React, { useRef, useMemo, useState } from 'react';
+import React, { useRef, useMemo, useState, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { Button, TreeSelect, Form, Table, Tag, Popconfirm, message } from 'antd';
 import ProForm, {
@@ -9,6 +9,7 @@ import ProForm, {
 } from '@ant-design/pro-form';
 import { PlusOutlined } from '@ant-design/icons';
 import services from 'services';
+import type { BaseMenuItem } from 'services/menu';
 import { buildTree } from 'utils/tree';
 import './menu.less';
 
@@ -22,6 +23,8 @@ const Menu: React.FC = () => {
     menuName?: string;
   }>({});
 
+  const [menuId, setMenuId] = useState<BaseMenuItem['id'] | undefined>(undefined);
+
   const queryClient = useQueryClient();
 
   const menuList = useQuery('menu.list', services.menu.getMenuList);
@@ -30,12 +33,38 @@ const Menu: React.FC = () => {
     enabled: false
   });
 
+  const menu = useQuery(['menu', menuId], () => services.menu.getMenuById(menuId as BaseMenuItem['id']), {
+    enabled: !!menuId,
+    onSuccess(res) {
+      setModalVisit(true);
+      setDefaultTreeData({
+        id: res.data.parentId,
+        menuName: res.data.parentName
+      });
+      formRef.current?.setFieldsValue({
+        menuName: res.data.menuName,
+        url: res.data.url,
+        parentId: res.data.parentId,
+        menuType: res.data.menuType,
+        menuVisible: res.data.menuVisible,
+        menuStatus: res.data.menuStatus
+      });
+      menuSelect.refetch();
+    }
+  });
+
   const refreshMenu = () => {
     queryClient.invalidateQueries('menu.nav');
     queryClient.invalidateQueries('menu.list');
   }
 
-  const createMenu = useMutation(services.menu.postMenu, {
+  const createMenu = useMutation(services.menu.createMenu, {
+    onSuccess() {
+      refreshMenu();
+    }
+  });
+
+  const updateMenu = useMutation(services.menu.updateMenu, {
     onSuccess() {
       refreshMenu();
     }
@@ -45,7 +74,7 @@ const Menu: React.FC = () => {
     onSuccess() {
       refreshMenu();
     }
-  })
+  });
 
   const treeData = useMemo(() => {
     if (menuSelect.data?.code === 200) {
@@ -54,6 +83,17 @@ const Menu: React.FC = () => {
       return [];
     }
   }, [menuSelect.data]);
+
+  useEffect(() => {
+    if (menuId) {
+      if (menu.isFetching) {
+        message.loading('数据加载中...', 0);
+      }
+      if (!menu.isFetching) {
+        message.destroy();
+      }
+    }
+  }, [menu.isFetching]);
 
   return (
     <>
@@ -75,13 +115,20 @@ const Menu: React.FC = () => {
         modalProps={{
           afterClose() {
             formRef.current?.resetFields();
+            setMenuId(undefined);
           }
         }}
         onVisibleChange={setModalVisit}
-        onFinish={values => {
-          return createMenu.mutateAsync(values).then(res => {
+        onFinish={async values => {
+          if (menuId) {
+            await updateMenu.mutateAsync({
+              id: menuId,
+              ...values
+            });
             return true;
-          });
+          }
+          await createMenu.mutateAsync(values);
+          return true;
         }}
       >
         <Form.Item name="parentId" label="上级菜单">
@@ -129,8 +176,8 @@ const Menu: React.FC = () => {
             label="菜单状态"
             name="menuStatus"
             options={[
-              { label: '正常', value: 1 },
-              { label: '启用', value: 2 },
+              { label: '启用', value: 1 },
+              { label: '停用', value: 2 },
             ]}
           />
         </ProForm.Group>
@@ -180,17 +227,19 @@ const Menu: React.FC = () => {
                   <Button type="link" onClick={() => {
                     setModalVisit(true);
                     setDefaultTreeData({
-                      id: record.id,
-                      menuName: record.menuName
+                      id: record.parentId,
+                      menuName: record.parentName
                     });
                     formRef.current?.setFieldsValue({
-                      parentId: record.id,
+                      parentId: record.parentId,
                       menuType: 2,
                       url: record.url
                     });
                     menuSelect.refetch();
                   }}>新增</Button>
-                  <Button type="link">修改</Button>
+                  <Button type="link" onClick={() => {
+                    setMenuId(record.id);
+                  }}>修改</Button>
                   <Popconfirm
                     title="确定要删除?"
                     okText="确定"

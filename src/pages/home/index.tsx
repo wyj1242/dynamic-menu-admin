@@ -7,7 +7,9 @@ const Home: React.FC = () => {
   return (
     <div>
       <Button onClick={() => {
-        queryClient.invalidateQueries('menu.nav');
+        queryClient.invalidateQueries('menu.nav', {
+          refetchInactive: true
+        });
       }}>刷新菜单</Button>
     </div>
   )

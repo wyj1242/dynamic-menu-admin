@@ -1,5 +1,7 @@
 const cloneDeep = require('lodash/cloneDeep');
 
+const PARENT_NAME = '主类目';
+
 let menuId = 100;
 
 const menus = [
@@ -56,6 +58,33 @@ const menus = [
     menuType: 2,
     menuVisible: 1,
     menuStatus: 1
+  },
+  {
+    parentId: 0,
+    id: 7,
+    url: '/video',
+    menuName: '视频管理',
+    menuType: 1,
+    menuVisible: 1,
+    menuStatus: 1
+  },
+  {
+    parentId: 7,
+    id: 8,
+    url: '/video/list',
+    menuName: '视频列表',
+    menuType: 2,
+    menuVisible: 1,
+    menuStatus: 1
+  },
+  {
+    parentId: 7,
+    id: 9,
+    url: '/video/:id',
+    menuName: '视频详情',
+    menuType: 2,
+    menuVisible: 2,
+    menuStatus: 1
   }
 ];
 
@@ -64,6 +93,12 @@ module.exports = [
     url: '/menu/nav',
     type: 'get',
     response: req => {
+      if (!req.headers['token']) {
+        return {
+          code: 201,
+          data: 'bad authentication token'
+        }
+      }
       return {
         code: 200,
         data: menus
@@ -108,19 +143,6 @@ module.exports = [
     }
   },
   {
-    url: '/menu/delete/:id',
-    type: 'delete',
-    response: req => {
-      const id = req.body.id;
-      const index = menus.findIndex(menu => menu.id === id);
-      menus.splice(index, 1);
-      return {
-        code: 200,
-        data: 'success'
-      }
-    }
-  },
-  {
     url: '/menu/list',
     type: 'get',
     response: req => {
@@ -144,7 +166,7 @@ module.exports = [
         } else {
           result.push({
             ...menu,
-            parentName: '一级菜单'
+            parentName: PARENT_NAME
           });
         }
       }
@@ -165,6 +187,53 @@ module.exports = [
       return {
         code: 200,
         data: result
+      }
+    }
+  },
+  {
+    url: '/menu/update/:id',
+    type: 'patch',
+    response: req => {
+      const id = +req.params.id;
+      const menu = menus.find(menu => menu.id === id);
+      Object.assign(menu, req.body);
+      return {
+        code: 200,
+        data: 'success'
+      }
+    }
+  },
+  {
+    url: '/menu/:id',
+    type: 'get',
+    response: req => {
+      const id = +req.params.id;
+      const menu = menus.find(menu => menu.id === id);
+      let parentName = PARENT_NAME;
+      menus.forEach(({ id, menuName }) => {
+        if (id === menu.parentId) {
+          parentName = menuName;
+        }
+      });
+      return {
+        code: 200,
+        data: {
+          parentName,
+          ...menu
+        }
+      }
+    }
+  },
+  {
+    url: '/menu/delete/:id',
+    type: 'delete',
+    response: req => {
+      const id = +req.params.id;
+      const index = menus.findIndex(menu => menu.id === id);
+      menus.splice(index, 1);
+      return {
+        code: 200,
+        data: 'success'
       }
     }
   }
